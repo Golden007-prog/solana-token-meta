@@ -10,7 +10,7 @@
 
 <a href="https://blixvip.com"><img src="assets/blix-hero.jpg" width="100%" alt="BLIX: AI-powered Solana memecoin terminal. Trade memes first."></a>
 
-**[Start trading at blixvip.com →](https://blixvip.com)** &nbsp;·&nbsp; [Public API](https://blixvip.com/api) &nbsp;·&nbsp; [MCP server](https://blixvip.com/mcp) &nbsp;·&nbsp; [Discord](https://discord.gg/grokbot)
+**[Start trading at blixvip.com →](https://blixvip.com)** &nbsp;·&nbsp; [Docs and guides](https://blixvip.github.io/solana-token-meta/) &nbsp;·&nbsp; [Public API](https://blixvip.com/api) &nbsp;·&nbsp; [MCP server](https://blixvip.com/mcp) &nbsp;·&nbsp; [Discord](https://discord.gg/grokbot)
 
 Built by the team behind **[Blix](https://blixvip.com)**, the Solana memecoin terminal. Reading a coin's mint is the first thing any token page needs; this is that step on its own.
 
@@ -96,6 +96,15 @@ Each runs with `node examples/<name>.js` (all but `offline.js` call the public R
 | [token-2022.js](examples/token-2022.js) | Every extension PYUSD carries, decoded |
 | [offchain.js](examples/offchain.js) | `fetchJson: true`: description, image and socials from the uri |
 | [offline.js](examples/offline.js) | No network: decode accounts you already fetched |
+
+**Integrations** (copy into your project as they are):
+
+| | |
+|---|---|
+| [integrations/http-endpoint](examples/integrations/http-endpoint) | `GET /token/<mint>` JSON API with risk flags, `node:http`, cached 60 s |
+| [integrations/github-action](examples/integrations/github-action) | A scheduled GitHub Actions check that fails when a token keeps a mint or freeze authority |
+
+Guides: [How to check if a Solana token's mint authority is revoked](https://blixvip.github.io/solana-token-meta/check-solana-token-mint-authority-revoked.html) · [How to read Token-2022 metadata in JavaScript](https://blixvip.github.io/solana-token-meta/read-token-2022-metadata-javascript.html)
 
 ## API
 
