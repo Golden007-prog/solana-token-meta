@@ -1,0 +1,35 @@
+{
+  "mint": "DxYWLXgKJpQmfhTG7ikK6oX6oDhxMhN5wCs5BJekpump",
+  "method": "getMultipleAccounts",
+  "params": [
+    [
+      "DxYWLXgKJpQmfhTG7ikK6oX6oDhxMhN5wCs5BJekpump",
+      "HtoFAvCAfsJHtRN8yEhE4U4jk7XZ6dAsWzSs1gz2ENFg"
+    ],
+    {
+      "encoding": "base64",
+      "commitment": "confirmed"
+    }
+  ],
+  "capturedAt": "2026-11-17T21:08:10.768Z",
+  "result": {
+    "context": {
+      "apiVersion": "4.4.0",
+      "slot": 470678688
+    },
+    "value": [
+      {
+        "data": [
+          "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAATpNvnNZfAwAGAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAARIAQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMCGz7Qr1mJN9ru2PHgW7k1ekXuPWcNTrWM5pSTI69vfEwCoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAwIbPtCvWYk32u7Y8eBbuTV6Re49Zw1OtYzmlJMjr298EAAAARGVlZAQAAABERUVEUAAAAGh0dHBzOi8vaXBmcy5pby9pcGZzL2JhZmtyZWlkdGRlYWdoY2Y0Mmhiem1qaXF6Zml0bnBidDdxM3hzamVjY2NpanNtNHRwNjVremc0dDQ0AAAAAA==",
+          "base64"
+        ],
+        "executable": false,
+        "lamports": 2712720,
+        "owner": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb",
+        "rentEpoch": 18446744073709552000,
+        "space": 406
+      },
+      null
+    ]
+  }
+}
