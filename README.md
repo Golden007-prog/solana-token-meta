@@ -1,15 +1,20 @@
 # solana-token-meta
 
-**Everything about a Solana token mint, from one RPC call.** Which token program it uses (SPL Token or Token-2022), decimals, supply, mint and freeze authority, every Token-2022 extension, and the name, symbol and uri from either the Token-2022 metadata extension or Metaplex. Zero dependencies.
+**Solana token metadata and rug check: everything about a token mint, from one RPC call.** Which token program it uses (SPL Token or Token-2022), decimals, supply, mint and freeze authority, every Token-2022 extension, and the name, symbol and uri from either the Token-2022 metadata extension or Metaplex. Zero dependencies.
 
 ![dependencies: 0](https://img.shields.io/badge/dependencies-0-brightgreen)
 ![node: 20+](https://img.shields.io/badge/node-20%2B-blue)
 [![license: MIT](https://img.shields.io/badge/license-MIT-black)](LICENSE)
 [![Discord](https://img.shields.io/badge/Discord-join-5865F2?logo=discord&logoColor=white)](https://discord.gg/grokbot)
+[![GitHub stars](https://img.shields.io/github/stars/blixvip/solana-token-meta?style=social)](https://github.com/blixvip/solana-token-meta/stargazers)
 
 <a href="https://blixvip.com"><img src="assets/blix-hero.jpg" width="100%" alt="BLIX: AI-powered Solana memecoin terminal. Trade memes first."></a>
 
+**[Start trading at blixvip.com →](https://blixvip.com)** &nbsp;·&nbsp; [Public API](https://blixvip.com/api) &nbsp;·&nbsp; [MCP server](https://blixvip.com/mcp) &nbsp;·&nbsp; [Discord](https://discord.gg/grokbot)
+
 Built by the team behind **[Blix](https://blixvip.com)**, the Solana memecoin terminal. Reading a coin's mint is the first thing any token page needs; this is that step on its own.
+
+If solana-token-meta saves you time, **[give it a ⭐](https://github.com/blixvip/solana-token-meta)**. It helps other Solana developers find it.
 
 ## The problem
 
@@ -161,6 +166,12 @@ Pull requests are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md), run `npm tes
 | [solana-rpc-pool](https://github.com/blixvip/solana-rpc-pool) | Several RPC endpoints behind one client, rate limits respected, failover |
 | [solana-tx-parse](https://github.com/blixvip/solana-tx-parse) | Explain a transaction: fees, errors, transfers, balance changes |
 | [solana-readonly-mcp](https://github.com/blixvip/solana-readonly-mcp) | The same kind of reads, exposed to AI agents over MCP |
+
+## Contributors
+
+Every merged pull request is credited in the release notes. Pick a [good first issue](https://github.com/blixvip/solana-token-meta/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) or say hi in the [Discord](https://discord.gg/grokbot).
+
+<a href="https://github.com/blixvip/solana-token-meta/graphs/contributors"><img src="https://contrib.rocks/image?repo=blixvip/solana-token-meta" alt="Contributors to solana-token-meta"></a>
 
 ## License
 
