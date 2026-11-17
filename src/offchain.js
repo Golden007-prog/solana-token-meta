@@ -1,5 +1,6 @@
 // Opt-in: fetch the off-chain JSON a token's `uri` points to, with a timeout, a size cap and a few SSRF guards.
 // Never throws: the result says { ok: false, error } instead, because a dead link is normal for tokens.
+import { timeoutSignal } from "./rpc.js";
 
 const PRIVATE_HOST = /^(localhost|.*\.localhost|.*\.local|.*\.internal|0\.0\.0\.0|\[?::1?\]?)$/i;
 function isPrivateIp(host) {
@@ -82,7 +83,8 @@ async function readCapped(res, maxBytes) {
 export async function fetchOffchainJson(uri, { fetch: fetchFn = globalThis.fetch, timeoutMs = 5_000, maxBytes = 256 * 1024, ...gw } = {}) {
   let url = resolveUri(uri, gw);
   if (!url) return { ok: false, url: null, error: uri ? "uri is not a public http(s), ipfs:// or ar:// address" : "no uri" };
-  const signal = AbortSignal.timeout(timeoutMs);
+  const timer = timeoutSignal(timeoutMs);
+  const signal = timer.signal;
   try {
     let res;
     for (let hop = 0; ; hop++) {
@@ -101,5 +103,7 @@ export async function fetchOffchainJson(uri, { fetch: fetchFn = globalThis.fetch
     return { ok: true, url, ...pickOffchainFields(json), json };
   } catch (e) {
     return { ok: false, url, error: e?.name === "TimeoutError" || e?.name === "AbortError" ? `no answer within ${timeoutMs} ms` : String(e?.message || e) };
+  } finally {
+    timer.clear();
   }
 }

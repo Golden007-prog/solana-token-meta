@@ -1,6 +1,6 @@
 {
   "name": "solana-token-meta",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Everything about a Solana token mint in one RPC call: SPL Token or Token-2022, decimals, supply, mint and freeze authority, Token-2022 extensions, Metaplex metadata, risk flags. Zero dependencies. By Blix.",
   "type": "module",
   "main": "src/index.js",
