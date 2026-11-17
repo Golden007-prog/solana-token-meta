@@ -159,6 +159,8 @@ Pull requests are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md), run `npm tes
 | [sol-holders](https://github.com/blixvip/sol-holders) | Top holders of a Solana token by wallet, pools and bonding curves left out |
 | [pump-curve](https://github.com/blixvip/pump-curve) | Read a pump.fun bonding curve: price, market cap, progress, migration |
 | [solana-rpc-pool](https://github.com/blixvip/solana-rpc-pool) | Several RPC endpoints behind one client, rate limits respected, failover |
+| [solana-tx-parse](https://github.com/blixvip/solana-tx-parse) | Explain a transaction: fees, errors, transfers, balance changes |
+| [solana-readonly-mcp](https://github.com/blixvip/solana-readonly-mcp) | The same kind of reads, exposed to AI agents over MCP |
 
 ## License
 
