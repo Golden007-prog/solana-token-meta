@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How to read Token-2022 metadata in JavaScript | Blix open source</title>
+<meta name="description" content="Decode a Token-2022 mint's TokenMetadata extension (name, symbol, uri, update authority, additional metadata) from the raw account bytes in plain JavaScript, and fall back to Metaplex for classic SPL tokens. Runnable Node.js code, no dependencies.">
+<link rel="canonical" href="https://blixvip.github.io/solana-token-meta/read-token-2022-metadata-javascript.html">
+<meta property="og:type" content="article">
+<meta property="og:title" content="How to read Token-2022 metadata in JavaScript">
+<meta property="og:description" content="Decode a Token-2022 mint's TokenMetadata extension from the raw account bytes in plain JavaScript, and fall back to Metaplex for classic SPL tokens. Runnable Node.js code.">
+<meta property="og:url" content="https://blixvip.github.io/solana-token-meta/read-token-2022-metadata-javascript.html">
+<meta property="og:image" content="https://raw.githubusercontent.com/blixvip/solana-token-meta/main/assets/blix-hero.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="https://raw.githubusercontent.com/blixvip/sol-holders/main/assets/blix-icon.png">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"How to read Token-2022 metadata in JavaScript","description":"Decode a Token-2022 mint's TokenMetadata extension (name, symbol, uri, update authority, additional metadata) from the raw account bytes in plain JavaScript, and fall back to Metaplex for classic SPL tokens. Runnable Node.js code, no dependencies.","url":"https://blixvip.github.io/solana-token-meta/read-token-2022-metadata-javascript.html","datePublished":"2026-11-17","dateModified":"2026-11-17","proficiencyLevel":"Intermediate","dependencies":"Node.js 20+","author":{"@type":"Organization","name":"Blix","url":"https://blixvip.com"},"publisher":{"@type":"Organization","name":"Blix","url":"https://blixvip.com"}}</script>
+<style>:root{color-scheme:dark;--bg:#0a0a0b;--panel:#141416;--line:#26262a;--ink:#f3f3f5;--muted:#a0a0a8;--accent:#8fb4ff}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.65 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
+main{max-width:780px;margin:0 auto;padding:32px 16px 64px}
+nav{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;font-size:14px;margin-bottom:36px}nav .brand{font-weight:700;color:var(--ink);margin-right:auto}
+h1{font-size:clamp(28px,5.5vw,40px);line-height:1.15;margin:0 0 12px;letter-spacing:-.02em}h2{font-size:22px;margin:40px 0 12px}h3{font-size:18px;margin:28px 0 8px}
+.lead{font-size:19px;color:var(--muted);margin:0 0 28px}
+pre{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px;overflow-x:auto;font:14px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;margin:0 0 16px}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.92em}p code,li code,td code{background:var(--panel);border:1px solid var(--line);border-radius:5px;padding:1px 5px}
+.wrap{overflow-x:auto;margin:0 0 16px}table{border-collapse:collapse;width:100%;font-size:15px}th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}th{background:var(--panel)}
+ul,ol{padding-left:22px}li{margin:6px 0}
+.box{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin:32px 0}.box h2{margin-top:0}
+.btn{display:inline-block;padding:10px 18px;border-radius:999px;border:1px solid var(--line);color:var(--ink);font-weight:600;margin:4px 8px 4px 0}.btn.main{background:var(--ink);color:#000;border-color:var(--ink)}.btn:hover{text-decoration:none;opacity:.9}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}.card{display:block;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px;color:var(--ink)}.card:hover{text-decoration:none;border-color:#3a3a40}.card b{display:block;margin-bottom:4px}.card span{color:var(--muted);font-size:14px}
+footer{margin-top:48px;padding-top:20px;border-top:1px solid var(--line);color:var(--muted);font-size:14px}</style>
+</head>
+<body>
+<main>
+<nav><a class="brand" href="https://blixvip.github.io/">BLIX open source</a><a href="https://blixvip.github.io/solana-token-meta/">solana-token-meta</a><a href="https://github.com/blixvip/solana-token-meta">GitHub</a><a href="https://discord.gg/grokbot">Discord</a><a href="https://blixvip.com">blixvip.com</a></nav>
+<article>
+<h1>How to read Token-2022 metadata in JavaScript</h1>
+<p class="lead">Token-2022 mints can store their name, symbol and uri inside the mint account itself, in the TokenMetadata extension. There is no separate metadata account to find. Here is the byte layout, a decoder in plain JavaScript, and what to do when a mint does not have it.</p>
+<h2>Where the metadata lives</h2>
+<p>A Token-2022 mint account is laid out like this:</p>
+<div class="wrap"><table><tr><th>Bytes</th><th>What</th></tr>
+<tr><td>0 to 81</td><td>The classic mint: mint authority, supply, decimals, freeze authority. Same as SPL Token.</td></tr>
+<tr><td>82 to 164</td><td>Zero padding, so a mint is never the size of a token account (165 bytes).</td></tr>
+<tr><td>165</td><td>Account type: <code>1</code> for a mint.</td></tr>
+<tr><td>166 onward</td><td>Extensions, one after another: type (u16), length (u16), then that many bytes.</td></tr></table></div>
+<p>TokenMetadata is extension type <strong>19</strong>. Its value is Borsh-encoded:</p>
+<ol>
+<li><code>updateAuthority</code>: 32 bytes, all zeros if none (the metadata can no longer change)</li>
+<li><code>mint</code>: 32 bytes</li>
+<li><code>name</code>, <code>symbol</code>, <code>uri</code>: each a u32 length followed by UTF-8 bytes</li>
+<li><code>additionalMetadata</code>: a u32 count, then that many key/value string pairs</li>
+</ol>
+<p>All integers are little-endian. The extension is variable-length and is usually the last one, because it is added or resized after the others.</p>
+<h2>Working code, zero dependencies</h2>
+<p>Save as <code>token-2022-metadata.mjs</code> and run <code>node token-2022-metadata.mjs &lt;mint&gt;</code>. Uses the free public mainnet RPC unless you set <code>SOLANA_RPC_URL</code>.</p>
+<pre><code>// token-2022-metadata.mjs: node token-2022-metadata.mjs &lt;mint&gt;. Node 20+, no dependencies
+const RPC = process.env.SOLANA_RPC_URL || "https://api.mainnet-beta.solana.com";
+const mint = process.argv[2] ?? "2b1kV6DkPAnxd5ixfnxCpjxmKwqjjaYmCZfHsFu24GXo"; // PYUSD
+const TOKEN_2022 = "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb";
+
+const ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+function base58(bytes) {
+  let n = BigInt("0x" + (Buffer.from(bytes).toString("hex") || "0")), s = "";
+  while (n &gt; 0n) { s = ALPHABET[Number(n % 58n)] + s; n /= 58n; }
+  for (const b of bytes) { if (b !== 0) break; s = "1" + s; }
+  return s;
+}
+
+const res = await fetch(RPC, {
+  method: "POST",
+  headers: { "content-type": "application/json" },
+  body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "getAccountInfo", params: [mint, { encoding: "base64" }] }),
+});
+const { result } = await res.json();
+if (result.value?.owner !== TOKEN_2022) throw new Error("not a Token-2022 mint");
+const data = Buffer.from(result.value.data[0], "base64");
+
+// A Token-2022 mint: 82-byte classic layout, padding to 165, one account-type byte (1 = mint), then extensions as
+// type (u16) | length (u16) | value. TokenMetadata is type 19.
+let at = 166, meta = null;
+while (at + 4 &lt;= data.length) {
+  const type = data.readUInt16LE(at), len = data.readUInt16LE(at + 2);
+  if (type === 0) break;
+  if (type === 19) meta = data.subarray(at + 4, at + 4 + len);
+  at += 4 + len;
+}
+if (!meta) throw new Error("this mint has no TokenMetadata extension (look for a Metaplex account instead)");
+
+let p = 0;
+const key = () =&gt; { const k = meta.subarray(p, p + 32); p += 32; return k.every((b) =&gt; b === 0) ? null : base58(k); };
+const str = () =&gt; { const n = meta.readUInt32LE(p); const s = meta.toString("utf8", p + 4, p + 4 + n); p += 4 + n; return s; };
+const updateAuthority = key(), metadataMint = key();
+const name = str(), symbol = str(), uri = str();
+const additional = [];
+const count = meta.readUInt32LE(p); p += 4;
+for (let i = 0; i &lt; count; i++) additional.push([str(), str()]);
+
+console.log({ name, symbol, uri, updateAuthority, mint: metadataMint, additional });</code></pre>
+<p>PayPal USD, and a pump.fun coin launched on Token-2022:</p>
+<pre><code>$ node token-2022-metadata.mjs
+{
+  name: 'PayPal USD',
+  symbol: 'PYUSD',
+  uri: 'https://token-metadata.paxos.com/pyusd_metadata/prod/solana/pyusd_metadata.json',
+  updateAuthority: '2apBGMsS6ti9RyF5TwQTDswXBWskiJP2LD4cUEDqYJjk',
+  mint: '2b1kV6DkPAnxd5ixfnxCpjxmKwqjjaYmCZfHsFu24GXo',
+  additional: []
+}
+
+$ node token-2022-metadata.mjs DxYWLXgKJpQmfhTG7ikK6oX6oDhxMhN5wCs5BJekpump
+{
+  name: 'Deed',
+  symbol: 'DEED',
+  uri: 'https://ipfs.io/ipfs/bafkreidtdeaghcf42hbzmjiqzfitnpbt7q3xsjecccijsm4tp65kzg4t44',
+  updateAuthority: null,
+  mint: 'DxYWLXgKJpQmfhTG7ikK6oX6oDhxMhN5wCs5BJekpump',
+  additional: []
+}</code></pre>
+<p>The pump.fun coin has no update authority: its name and symbol are fixed for good. PYUSD's issuer can still change them.</p>
+<h2>Three cases the decoder has to handle</h2>
+<ol>
+<li><strong>A classic SPL token</strong> (USDC, BONK, older pump.fun coins). It is owned by the old Token program and has no extensions at all; its name lives in a separate Metaplex metadata account at a program-derived address. The script above refuses it with "not a Token-2022 mint".</li>
+<li><strong>A Token-2022 mint without the extension.</strong> Some Token-2022 mints still use Metaplex. Look for the <code>metadataPointer</code> extension (type 18): it names the account that holds the metadata.</li>
+<li><strong>A pointer to another account.</strong> If <code>metadataPointer</code> points somewhere other than the mint, the metadata is in that account, stored in the same TokenMetadata format inside an entry that starts with an 8-byte discriminator and a 4-byte length.</li>
+</ol>
+<h2>Shortcut: jsonParsed</h2>
+<p>If all you need is a quick look, <code>getAccountInfo</code> with <code>encoding: "jsonParsed"</code> returns the extensions decoded, TokenMetadata included, under <code>parsed.info.extensions</code>. Decoding the bytes yourself is what you need when the data reaches you as base64: from <code>accountSubscribe</code>, Geyser, <code>getMultipleAccounts</code> in base64 or a cache.</p>
+<h2>Both formats in one call</h2>
+<p><a href="https://github.com/blixvip/solana-token-meta">solana-token-meta</a> handles Token-2022 and Metaplex together: it derives the Metaplex address locally, reads the mint and that account in one <code>getMultipleAccounts</code> call, decodes every extension, and tells you which source the name came from:</p>
+<pre><code>npm install github:blixvip/solana-token-meta</code></pre>
+<pre><code>import { getTokenMeta } from "solana-token-meta";
+
+const m = await getTokenMeta("2b1kV6DkPAnxd5ixfnxCpjxmKwqjjaYmCZfHsFu24GXo"); // PYUSD
+console.log(m.program, m.metadata);
+console.log(Object.keys(m.extensions));
+console.log(m.transferFee);</code></pre>
+<pre><code>token-2022 {
+  source: 'token-2022',
+  name: 'PayPal USD',
+  symbol: 'PYUSD',
+  uri: 'https://token-metadata.paxos.com/pyusd_metadata/prod/solana/pyusd_metadata.json',
+  updateAuthority: '2apBGMsS6ti9RyF5TwQTDswXBWskiJP2LD4cUEDqYJjk',
+  isMutable: true,
+  additionalMetadata: []
+}
+[
+  'mintCloseAuthority',
+  'permanentDelegate',
+  'transferFeeConfig',
+  'confidentialTransferMint',
+  'confidentialTransferFeeConfig',
+  'transferHook',
+  'metadataPointer',
+  'tokenMetadata'
+]
+{ basisPoints: 0, maximumFee: '0', sinceEpoch: '605' }</code></pre>
+<p>Pass a classic mint like USDC and <code>metadata.source</code> is <code>"metaplex"</code> instead, with the same fields. Already have the base64 accounts? <code>decodeMint(data, owner)</code> and <code>buildTokenMeta()</code> work offline.</p>
+<h2>Limits to know</h2>
+<ul>
+<li><strong>The uri is off-chain.</strong> The image, description and socials live in the JSON the uri points to, on IPFS, Arweave or a web server, and that host can be slow or gone. solana-token-meta fetches it only when you ask (<code>fetchJson: true</code>), with a timeout and size cap.</li>
+<li>solana-token-meta does not yet follow a metadata pointer to a third account; it reports the address. That is an <a href="https://github.com/blixvip/solana-token-meta/issues">open issue</a> if you want to take it.</li>
+</ul>
+</article>
+<div class="box"><h2>Want it done for you?</h2>
+<p>This is the small, open version. <a href="https://blixvip.com">Blix</a> is the AI-powered Solana memecoin terminal it comes from: every pump.fun launch live, AI coin ratings, narratives, wallet and X tracking, and one-click trading with 0% fees. There is a <a href="https://blixvip.com/api">public API</a> and an <a href="https://blixvip.com/mcp">MCP server</a> too.</p>
+<p><a class="btn main" href="https://blixvip.com">Start trading at blixvip.com</a><a class="btn" href="https://discord.gg/grokbot">Join the Discord</a></p></div>
+<h2>Help build it</h2>
+<p>solana-token-meta is open source and takes pull requests. There are <a href="https://github.com/blixvip/solana-token-meta/issues?q=is%3Aissue%20is%3Aopen%20label%3A%22good%20first%20issue%22">good first issues</a> with step-by-step instructions, and setup is <code>git clone</code> and <code>npm test</code>.</p>
+<h2>More guides</h2>
+<div class="grid"><a class="card" href="check-solana-token-mint-authority-revoked.html"><b>How to check if a Solana token's mint authority is revoked</b><span>solana-token-meta</span></a><a class="card" href="https://blixvip.github.io/solana-tx-parse/solana-transaction-priority-fee.html"><b>How to see the priority fee a Solana transaction paid</b><span>solana-tx-parse</span></a><a class="card" href="https://blixvip.github.io/sol-holders/solana-token-top-10-holders-percentage.html"><b>How to calculate a Solana token's top 10 holders percentage</b><span>sol-holders</span></a><a class="card" href="https://blixvip.github.io/pump-stream/detect-new-pump-fun-tokens-in-real-time.html"><b>How to detect new pump.fun tokens in real time</b><span>pump-stream</span></a></div>
+<footer>Written by the <a href="https://blixvip.com">Blix</a> team. Code is MIT licensed. <a href="https://github.com/blixvip">github.com/blixvip</a> · <a href="https://discord.gg/grokbot">discord.gg/grokbot</a> · <a href="https://blixvip.github.io/">All tools and guides</a></footer>
+</main>
+</body>
+</html>

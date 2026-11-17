@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>How to check if a Solana token's mint authority is revoked | Blix open source</title>
+<meta name="description" content="Read a Solana token's mint authority and freeze authority straight from the chain with one getAccountInfo call, plus the Token-2022 powers (permanent delegate, transfer fee, transfer hook) a rug check also needs. Runnable Node.js code, no dependencies.">
+<link rel="canonical" href="https://blixvip.github.io/solana-token-meta/check-solana-token-mint-authority-revoked.html">
+<meta property="og:type" content="article">
+<meta property="og:title" content="How to check if a Solana token's mint authority is revoked">
+<meta property="og:description" content="Read a Solana token's mint and freeze authority from the chain with one RPC call, plus the Token-2022 powers a rug check also needs. Runnable Node.js code.">
+<meta property="og:url" content="https://blixvip.github.io/solana-token-meta/check-solana-token-mint-authority-revoked.html">
+<meta property="og:image" content="https://raw.githubusercontent.com/blixvip/solana-token-meta/main/assets/blix-hero.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="https://raw.githubusercontent.com/blixvip/sol-holders/main/assets/blix-icon.png">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"TechArticle","headline":"How to check if a Solana token's mint authority is revoked","description":"Read a Solana token's mint authority and freeze authority straight from the chain with one getAccountInfo call, plus the Token-2022 powers (permanent delegate, transfer fee, transfer hook) a rug check also needs. Runnable Node.js code, no dependencies.","url":"https://blixvip.github.io/solana-token-meta/check-solana-token-mint-authority-revoked.html","datePublished":"2026-11-17","dateModified":"2026-11-17","proficiencyLevel":"Beginner","dependencies":"Node.js 20+","author":{"@type":"Organization","name":"Blix","url":"https://blixvip.com"},"publisher":{"@type":"Organization","name":"Blix","url":"https://blixvip.com"}}</script>
+<style>:root{color-scheme:dark;--bg:#0a0a0b;--panel:#141416;--line:#26262a;--ink:#f3f3f5;--muted:#a0a0a8;--accent:#8fb4ff}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.65 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+a{color:var(--accent);text-decoration:none}a:hover{text-decoration:underline}
+main{max-width:780px;margin:0 auto;padding:32px 16px 64px}
+nav{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;font-size:14px;margin-bottom:36px}nav .brand{font-weight:700;color:var(--ink);margin-right:auto}
+h1{font-size:clamp(28px,5.5vw,40px);line-height:1.15;margin:0 0 12px;letter-spacing:-.02em}h2{font-size:22px;margin:40px 0 12px}h3{font-size:18px;margin:28px 0 8px}
+.lead{font-size:19px;color:var(--muted);margin:0 0 28px}
+pre{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px;overflow-x:auto;font:14px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;margin:0 0 16px}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.92em}p code,li code,td code{background:var(--panel);border:1px solid var(--line);border-radius:5px;padding:1px 5px}
+.wrap{overflow-x:auto;margin:0 0 16px}table{border-collapse:collapse;width:100%;font-size:15px}th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}th{background:var(--panel)}
+ul,ol{padding-left:22px}li{margin:6px 0}
+.box{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin:32px 0}.box h2{margin-top:0}
+.btn{display:inline-block;padding:10px 18px;border-radius:999px;border:1px solid var(--line);color:var(--ink);font-weight:600;margin:4px 8px 4px 0}.btn.main{background:var(--ink);color:#000;border-color:var(--ink)}.btn:hover{text-decoration:none;opacity:.9}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}.card{display:block;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px;color:var(--ink)}.card:hover{text-decoration:none;border-color:#3a3a40}.card b{display:block;margin-bottom:4px}.card span{color:var(--muted);font-size:14px}
+footer{margin-top:48px;padding-top:20px;border-top:1px solid var(--line);color:var(--muted);font-size:14px}</style>
+</head>
+<body>
+<main>
+<nav><a class="brand" href="https://blixvip.github.io/">BLIX open source</a><a href="https://blixvip.github.io/solana-token-meta/">solana-token-meta</a><a href="https://github.com/blixvip/solana-token-meta">GitHub</a><a href="https://discord.gg/grokbot">Discord</a><a href="https://blixvip.com">blixvip.com</a></nav>
+<article>
+<h1>How to check if a Solana token's mint authority is revoked</h1>
+<p class="lead">"Mint authority revoked" means nobody can ever print more of the token. "Freeze authority revoked" means nobody can freeze your tokens in your wallet. Both are fields on the token's mint account, and you can read them yourself with one RPC call, no explorer and no API key.</p>
+<h2>What the two authorities can do</h2>
+<div class="wrap"><table><tr><th>Field</th><th>If set, its holder can</th><th>Revoked looks like</th></tr>
+<tr><td><code>mintAuthority</code></td><td>Mint any amount of new tokens, diluting every holder</td><td><code>null</code></td></tr>
+<tr><td><code>freezeAuthority</code></td><td>Freeze any token account, so its owner cannot sell or move it</td><td><code>null</code></td></tr></table></div>
+<p>A memecoin that still has either one live is a risk. A regulated stablecoin like USDC keeps both on purpose. The field is the fact; what it means depends on who holds it.</p>
+<h2>Working code, zero dependencies</h2>
+<p><code>getAccountInfo</code> with <code>encoding: "jsonParsed"</code> decodes the mint for you. Save as <code>check-mint.mjs</code> and run <code>node check-mint.mjs &lt;mint&gt;</code>. The free public mainnet RPC serves this method, so no key is needed.</p>
+<pre><code>// check-mint.mjs: node check-mint.mjs &lt;mint&gt;. Node 20+, no dependencies
+const RPC = process.env.SOLANA_RPC_URL || "https://api.mainnet-beta.solana.com";
+const mint = process.argv[2] ?? "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263"; // BONK
+
+const res = await fetch(RPC, {
+  method: "POST",
+  headers: { "content-type": "application/json" },
+  body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "getAccountInfo", params: [mint, { encoding: "jsonParsed" }] }),
+});
+const { result, error } = await res.json();
+if (error) throw new Error(`RPC error ${error.code}: ${error.message}`);
+const parsed = result.value?.data?.parsed;
+if (parsed?.type !== "mint") throw new Error("not a token mint");
+
+const { mintAuthority, freezeAuthority, supply, decimals } = parsed.info;
+console.log("program:         ", result.value.data.program); // "spl-token" or "spl-token-2022"
+console.log("mint authority:  ", mintAuthority ?? "revoked");
+console.log("freeze authority:", freezeAuthority ?? "revoked");
+console.log("supply:          ", supply, "raw units,", decimals, "decimals");
+
+// Token-2022 mints can carry more powers than the two classic authorities
+for (const ext of parsed.info.extensions ?? []) {
+  if (["permanentDelegate", "transferFeeConfig", "transferHook", "mintCloseAuthority", "pausableConfig"].includes(ext.extension)) {
+    console.log("extension:       ", ext.extension, JSON.stringify(ext.state));
+  }
+}</code></pre>
+<p>Three real mints:</p>
+<pre><code>$ node check-mint.mjs DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263
+program:          spl-token
+mint authority:   revoked
+freeze authority: revoked
+supply:           8799429331529188186 raw units, 5 decimals
+
+$ node check-mint.mjs EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v
+program:          spl-token
+mint authority:   BJE5MMbqXjVwjAF7oxwPYXnTXDyspzZyt4vwenNw5ruG
+freeze authority: 7dGbd2QZcCKcTndnHcTL8q7SMVXAkp688NTQYwrRCrar
+supply:           9149767648444108 raw units, 6 decimals
+
+$ node check-mint.mjs 2b1kV6DkPAnxd5ixfnxCpjxmKwqjjaYmCZfHsFu24GXo
+program:          spl-token-2022
+mint authority:   AxJkHRY3puoofyj7Pn512M1SGBgWroXMkEdNPQypkzbu
+freeze authority: 2apBGMsS6ti9RyF5TwQTDswXBWskiJP2LD4cUEDqYJjk
+supply:           778774433254451 raw units, 6 decimals
+extension:        mintCloseAuthority {"closeAuthority":"2apBGMsS6ti9RyF5TwQTDswXBWskiJP2LD4cUEDqYJjk"}
+extension:        permanentDelegate {"delegate":"2apBGMsS6ti9RyF5TwQTDswXBWskiJP2LD4cUEDqYJjk"}
+extension:        transferFeeConfig {"newerTransferFee":{"epoch":605,"maximumFee":0,"transferFeeBasisPoints":0},...}
+extension:        transferHook {"authority":"2apBGMsS6ti9RyF5TwQTDswXBWskiJP2LD4cUEDqYJjk","programId":null}</code></pre>
+<p>BONK has both authorities revoked. USDC and PYUSD (PayPal USD) keep theirs, as issuers of regulated stablecoins do.</p>
+<h2>Token-2022: revoked is not the whole story</h2>
+<p>Mints owned by the Token-2022 program can carry extensions with powers the two classic fields do not show. For a rug check, look at these too:</p>
+<ul>
+<li><strong>permanentDelegate</strong>: an address that can transfer or burn tokens <em>from any holder's account</em>. On a memecoin, that is a worse power than a mint authority.</li>
+<li><strong>transferFeeConfig</strong>: a fee in basis points taken on every transfer, which its authority can raise (up to 100%) for later epochs.</li>
+<li><strong>transferHook</strong>: a program that runs on every transfer and can make transfers fail. <code>programId: null</code>, as on PYUSD above, means none is set.</li>
+<li><strong>pausableConfig</strong> and <strong>defaultAccountState</strong>: transfers can be paused, or new accounts start frozen.</li>
+<li><strong>mintCloseAuthority</strong>: the mint account itself can be closed once supply is zero.</li>
+</ul>
+<h2>Where pump.fun coins stand</h2>
+<p>pump.fun creates coins with the mint and freeze authority already revoked, so for those the check mostly confirms it. The question that matters there is who holds the supply, not who can mint more. Coins launched elsewhere, and any token someone sends you, are worth checking.</p>
+<h2>Many mints at once, with metadata</h2>
+<p><a href="https://github.com/blixvip/solana-token-meta">solana-token-meta</a> reads the mint and its Metaplex metadata together, 50 mints per <code>getMultipleAccounts</code> call, decodes every Token-2022 extension, and returns the facts above as booleans:</p>
+<pre><code>npm install github:blixvip/solana-token-meta</code></pre>
+<pre><code>import { getTokenMetas, riskFlags } from "solana-token-meta";
+
+const metas = await getTokenMetas([
+  "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263", // BONK
+  "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v", // USDC
+  "DxYWLXgKJpQmfhTG7ikK6oX6oDhxMhN5wCs5BJekpump", // a pump.fun coin on Token-2022
+]);
+for (const m of metas) {
+  const f = riskFlags(m);
+  console.log(m.metadata?.symbol, m.program, "mint:", f.mintAuthorityActive ? "ACTIVE" : "revoked", "freeze:", f.freezeAuthorityActive ? "ACTIVE" : "revoked", "metadata mutable:", f.metadataMutable);
+}</code></pre>
+<pre><code>Bonk spl-token mint: revoked freeze: revoked metadata mutable: true
+USDC spl-token mint: ACTIVE freeze: ACTIVE metadata mutable: true
+DEED token-2022 mint: revoked freeze: revoked metadata mutable: false</code></pre>
+<p><code>riskFlags(m)</code> also has <code>hasPermanentDelegate</code>, <code>hasTransferFee</code>, <code>hasTransferHook</code>, <code>nonTransferable</code>, <code>defaultAccountsFrozen</code> and <code>paused</code>. Or from a terminal: <code>npx github:blixvip/solana-token-meta &lt;mint&gt;</code>.</p>
+<h2>Limits to know</h2>
+<ul>
+<li><strong>Revoked authorities do not make a token safe.</strong> Concentrated holders, a pulled liquidity pool or a mutable name can still hurt you. For holder concentration, see <a href="https://blixvip.github.io/sol-holders/solana-token-top-10-holders-percentage.html">how to calculate the top 10 holders percentage</a>.</li>
+<li><strong>Who holds an active authority matters.</strong> A multisig of a known issuer and a fresh wallet look the same in this field.</li>
+<li><strong>Mutable metadata</strong> means the name, symbol and image can still be changed by the update authority. That is a separate field, in the Metaplex account or the Token-2022 metadata extension.</li>
+</ul>
+</article>
+<div class="box"><h2>Want it done for you?</h2>
+<p>This is the small, open version. <a href="https://blixvip.com">Blix</a> is the AI-powered Solana memecoin terminal it comes from: every pump.fun launch live, AI coin ratings, narratives, wallet and X tracking, and one-click trading with 0% fees. There is a <a href="https://blixvip.com/api">public API</a> and an <a href="https://blixvip.com/mcp">MCP server</a> too.</p>
+<p><a class="btn main" href="https://blixvip.com">Start trading at blixvip.com</a><a class="btn" href="https://discord.gg/grokbot">Join the Discord</a></p></div>
+<h2>Help build it</h2>
+<p>solana-token-meta is open source and takes pull requests. There are <a href="https://github.com/blixvip/solana-token-meta/issues?q=is%3Aissue%20is%3Aopen%20label%3A%22good%20first%20issue%22">good first issues</a> with step-by-step instructions, and setup is <code>git clone</code> and <code>npm test</code>.</p>
+<h2>More guides</h2>
+<div class="grid"><a class="card" href="read-token-2022-metadata-javascript.html"><b>How to read Token-2022 metadata in JavaScript</b><span>solana-token-meta</span></a><a class="card" href="https://blixvip.github.io/sol-holders/solana-token-top-10-holders-percentage.html"><b>How to calculate a Solana token's top 10 holders percentage</b><span>sol-holders</span></a><a class="card" href="https://blixvip.github.io/solana-tx-parse/parse-solana-transaction-nodejs-without-web3js.html"><b>How to parse a Solana transaction in Node.js without web3.js</b><span>solana-tx-parse</span></a><a class="card" href="https://blixvip.github.io/pump-curve/pump-fun-market-cap-without-api.html"><b>How to get a pump.fun token's market cap without an API</b><span>pump-curve</span></a></div>
+<footer>Written by the <a href="https://blixvip.com">Blix</a> team. Code is MIT licensed. <a href="https://github.com/blixvip">github.com/blixvip</a> · <a href="https://discord.gg/grokbot">discord.gg/grokbot</a> · <a href="https://blixvip.github.io/">All tools and guides</a></footer>
+</main>
+</body>
+</html>

@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://blixvip.github.io/solana-token-meta/sitemap.xml
