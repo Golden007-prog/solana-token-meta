@@ -125,6 +125,80 @@ Other CLI runs:
 - GOAT's `Qm…` uri timed out (5 s) on the default gateway once; reported as an error, not thrown.
 - On Windows, `process.exit()` right after a fetch triggered a libuv assertion (`UV_HANDLE_CLOSING`); the CLI now sets `process.exitCode` instead.
 
+## Docs site (GitHub Pages, `docs/`)
+
+Checked 2026-11-17, Node v24.15.0, Windows 11. Every JavaScript block on `docs/index.html`, `docs/check-solana-token-mint-authority-revoked.html` and `docs/read-token-2022-metadata-javascript.html` was extracted from the HTML (entities unescaped), saved as `.mjs` and run against the public mainnet RPC, one at a time with 3 s pauses, with this repository installed as `solana-token-meta` in a scratch folder. All five exited 0, and the output shown on the pages is what they printed. The zero-dependency snippets were also run on the other mints the pages show: `check-mint.mjs` on USDC and PYUSD, `token-2022-metadata.mjs` on `DxYWLXgK…pump` (DEED, `updateAuthority: null`) and on USDC (refused with "not a Token-2022 mint", as the page says). The statement that `jsonParsed` returns the TokenMetadata extension was checked on PYUSD with `getAccountInfo`.
+
+## Integrations
+
+`examples/integrations/`. Both import `solana-token-meta` by name; Node resolves that to this package through its `exports` field, so the files run unchanged inside the repo and in a project that installed it.
+
+### `http-endpoint/server.js`
+
+Started with `node examples/integrations/http-endpoint/server.js`, then (each JSON line is a summary of the response made with `node -e`):
+
+```
+$ curl localhost:8788/token/DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263
+{"mint":"DezX…B263","exists":true,"program":"spl-token","name":"Bonk","mintAuthority":null,"riskFlags":["metadataMutable"]}
+HTTP 200 0.269702s
+$ curl "localhost:8788/tokens?mints=BONK,USDC,PYUSD"      (BONK from the 60 s cache, the other two in one RPC call)
+{"mint":"DezX…B263",…,"name":"Bonk","riskFlags":["metadataMutable"]}
+{"mint":"EPjF…Dt1v",…,"name":"USD Coin","mintAuthority":"BJE5MMbq…5ruG","riskFlags":["mintAuthorityActive","freezeAuthorityActive","metadataMutable"]}
+{"mint":"2b1k…4GXo","program":"token-2022","name":"PayPal USD",…,"riskFlags":["mintAuthorityActive","freezeAuthorityActive","metadataMutable","hasPermanentDelegate"]}
+HTTP 200 0.086536s
+$ curl localhost:8788/token/11111111111111111111111111111111
+{"exists":false,"reason":"not a token mint: the account is owned by NativeLoader1111111111111111111111111111111"}    HTTP 404
+$ curl localhost:8788/token/nope
+{ "error": "InvalidInputError", "message": "not a Solana address: \"nope\"" }    HTTP 400
+$ curl localhost:8788/tokens
+{ "error": "pass 1 to 50 comma-separated mints in ?mints=" }    HTTP 400
+```
+
+Not exercised: the 502/503/504 branches (they map `RpcError`, 429 and `RpcTimeoutError`, covered by `test/api.test.js`).
+
+### `github-action/token-check.js` and `token-check.yml`
+
+```
+$ node examples/integrations/github-action/token-check.js DezX…B263 EPjF…Dt1v
+PASS  DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263  Bonk (Bonk)  no flagged powers (metadata mutable)
+FAIL  EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v  USD Coin (USDC)  mintAuthorityActive, freezeAuthorityActive (metadata mutable)
+
+1 of 2 passed
+exit=1
+$ GITHUB_STEP_SUMMARY=summary.md SOLANA_RPC_URL= node …/token-check.js EPjF…Dt1v --allow mintAuthorityActive,freezeAuthorityActive
+PASS  EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v  USD Coin (USDC)  no flagged powers (metadata mutable)
+
+1 of 1 passed (allowed: mintAuthorityActive, freezeAuthorityActive)
+exit=0
+$ cat summary.md
+### Token check
+
+| | Mint | Token | Result |
+|---|---|---|---|
+| ✅ | `EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v` | USD Coin (USDC) | no flagged powers (metadata mutable) |
+$ node …/token-check.js "DezX…B263,DxYW…pump 11111111111111111111111111111111"
+PASS  DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263  Bonk (Bonk)  no flagged powers (metadata mutable)
+PASS  DxYWLXgKJpQmfhTG7ikK6oX6oDhxMhN5wCs5BJekpump  Deed (DEED)  no flagged powers
+FAIL  11111111111111111111111111111111    not a token mint: the account is owned by NativeLoader1111111111111111111111111111111
+
+2 of 3 passed
+exit=1
+$ node …/token-check.js notamint
+InvalidInputError: not a Solana address: "notamint"
+exit=2
+$ SOLANA_RPC_URL=http://127.0.0.1:9 node …/token-check.js DezX…B263
+RpcError: getMultipleAccounts: the RPC could not be reached (fetch failed)
+exit=2
+```
+
+`SOLANA_RPC_URL=` (empty, which is how an unset repository secret arrives in Actions) falls back to the public RPC because the script lets the library read the variable. A first version called `process.exit()` after the fetch and hit the Windows libuv assertion (exit 127); it now sets `process.exitCode`.
+
+**Not verified:** `token-check.yml` was not run on GitHub Actions (that needs a workflow in a repository). It uses only `actions/checkout@v4`, `actions/setup-node@v4`, `npm install --no-save github:blixvip/solana-token-meta` and the script run above.
+
+### Found while doing this
+
+`getTokenMetas(mints, { rpcUrl: "" })` uses `""` as the URL (a destructuring default only replaces `undefined`) and fails with "the RPC could not be reached". solana-tx-parse treats an empty `rpcUrl` as "use the default". Filed as an issue.
+
 ## Not verified
 
 - `npx github:blixvip/solana-token-meta` and `npm install github:blixvip/solana-token-meta`: the repo is not published.
