@@ -157,7 +157,7 @@ export function resolveUri(uri: string, opts?: { ipfsGateway?: string; arweaveGa
 export function pickOffchainFields(json: unknown): OffchainFields;
 
 export function base58Encode(bytes: Uint8Array): string;
-export function base58Decode(text: string): Buffer;
+export function base58Decode(text: string): Uint8Array; // a Node Buffer at runtime
 export function isAddress(value: unknown): boolean;
 export function isOnCurve(bytes: Uint8Array): boolean;
 export function findProgramAddress(seeds: (Uint8Array | string)[], programId: string | Uint8Array): [string, number];
