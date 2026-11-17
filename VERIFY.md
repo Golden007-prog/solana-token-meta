@@ -197,7 +197,7 @@ exit=2
 
 ### Found while doing this
 
-`getTokenMetas(mints, { rpcUrl: "" })` uses `""` as the URL (a destructuring default only replaces `undefined`) and fails with "the RPC could not be reached". solana-tx-parse treats an empty `rpcUrl` as "use the default". Filed as an issue.
+`getTokenMetas(mints, { rpcUrl: "" })` uses `""` as the URL (a destructuring default only replaces `undefined`) and fails with "the RPC could not be reached". solana-tx-parse treats an empty `rpcUrl` as "use the default". Filed as [#6](https://github.com/blixvip/solana-token-meta/issues/6).
 
 ## Not verified
 

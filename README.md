@@ -166,6 +166,20 @@ Services this can talk to, and who runs them:
 
 Pull requests are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md), run `npm test` (fully offline), and come talk it through on **[Discord](https://discord.gg/grokbot)** before larger changes. `node scripts/capture-fixtures.js` re-captures the test fixtures from mainnet.
 
+## Good first issues
+
+New to the project? These are small, self-contained tasks, each with why, what to do, where, and when it is done:
+
+- [#3 Real fixtures for less common Token-2022 extensions](https://github.com/blixvip/solana-token-meta/issues/3)
+- [#4 Fallback IPFS gateways](https://github.com/blixvip/solana-token-meta/issues/4)
+- [#5 Decode remaining Metaplex fields](https://github.com/blixvip/solana-token-meta/issues/5)
+- [#6 An empty `rpcUrl` is used as the URL instead of falling back](https://github.com/blixvip/solana-token-meta/issues/6)
+- [#7 CLI: unknown flags and `--rpc` without a value are silently ignored](https://github.com/blixvip/solana-token-meta/issues/7)
+- [#8 CLI: `--fail-on` to exit 1 when risk flags are set](https://github.com/blixvip/solana-token-meta/issues/8)
+- [#9 README: an FAQ for the questions people search](https://github.com/blixvip/solana-token-meta/issues/9)
+
+All of them: [good first issue](https://github.com/blixvip/solana-token-meta/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22) · bigger pieces and integration examples: [help wanted](https://github.com/blixvip/solana-token-meta/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted%22) · everything by area: the [Roadmap](https://github.com/blixvip/solana-token-meta/issues/13) · questions and ideas: [Discussions](https://github.com/blixvip/solana-token-meta/discussions/14). Comment "I'll take this" on an issue before you start.
+
 ## Related projects
 
 | | |
