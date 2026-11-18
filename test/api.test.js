@@ -131,3 +131,11 @@ test("live: USDC and PYUSD on the public RPC (LIVE=1 only)", { skip: process.env
   assert.equal(pyusd.program, "token-2022");
   assert.ok(pyusd.extensionTypes.includes(19));
 });
+
+test("resolveUri: trailing-dot, single-label and reserved-range hosts are refused (#15)", () => {
+  for (const u of ["http://localhost./x", "http://foo.internal./x", "http://box.local./x", "http://intranet/x", "http://224.0.0.1/x",
+    "http://255.255.255.255/x", "http://198.18.0.1/x", "http://192.0.0.8/x", "http://2130706433/x", "http://[::ffff:127.0.0.1]/x"])
+    assert.equal(resolveUri(u), null, u);
+  assert.equal(resolveUri("https://example.com./meta.json"), "https://example.com./meta.json");
+  assert.equal(resolveUri("https://arweave.net/abc"), "https://arweave.net/abc");
+});

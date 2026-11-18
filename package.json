@@ -1,19 +1,58 @@
 {
   "name": "solana-token-meta",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Everything about a Solana token mint in one RPC call: SPL Token or Token-2022, decimals, supply, mint and freeze authority, Token-2022 extensions, Metaplex metadata, risk flags. Zero dependencies. By Blix.",
   "type": "module",
   "main": "src/index.js",
   "types": "index.d.ts",
-  "exports": { ".": { "types": "./index.d.ts", "default": "./src/index.js" } },
-  "bin": { "solana-token-meta": "bin/cli.js" },
-  "files": ["src", "bin", "index.d.ts", "docs", "README.md", "CHANGELOG.md", "LICENSE"],
-  "scripts": { "test": "node --test" },
-  "engines": { "node": ">=20" },
-  "keywords": ["solana", "spl-token", "token-2022", "token-metadata", "metaplex", "mint-authority", "freeze-authority", "transfer-fee", "token-extensions", "pump.fun", "memecoin", "rug-check", "rpc", "blix"],
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "default": "./src/index.js"
+    }
+  },
+  "bin": {
+    "solana-token-meta": "bin/cli.js"
+  },
+  "files": [
+    "src",
+    "bin",
+    "index.d.ts",
+    "docs",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "keywords": [
+    "solana",
+    "spl-token",
+    "token-2022",
+    "token-metadata",
+    "metaplex",
+    "mint-authority",
+    "freeze-authority",
+    "transfer-fee",
+    "token-extensions",
+    "pump.fun",
+    "memecoin",
+    "rug-check",
+    "rpc",
+    "blix"
+  ],
   "author": "Blix (https://blixvip.com)",
   "license": "MIT",
   "homepage": "https://blixvip.com",
-  "repository": { "type": "git", "url": "git+https://github.com/blixvip/solana-token-meta.git" },
-  "bugs": { "url": "https://github.com/blixvip/solana-token-meta/issues" }
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/blixvip/solana-token-meta.git"
+  },
+  "bugs": {
+    "url": "https://github.com/blixvip/solana-token-meta/issues"
+  }
 }

@@ -8,7 +8,8 @@ function isPrivateIp(host) {
   const m = h.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
   if (m) {
     const [a, b] = [Number(m[1]), Number(m[2])];
-    return a === 10 || a === 127 || a === 0 || (a === 169 && b === 254) || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168) || (a === 100 && b >= 64 && b <= 127);
+    return a === 10 || a === 127 || a === 0 || (a === 169 && b === 254) || (a === 172 && b >= 16 && b <= 31) || (a === 192 && b === 168) || (a === 100 && b >= 64 && b <= 127)
+      || (a === 192 && b === 0) || (a === 198 && (b === 18 || b === 19)) || a >= 224;   // IETF, benchmarking, multicast/reserved/broadcast
   }
   return h.includes(":") && (/^(fc|fd|fe80)/i.test(h) || h === "::" || /^::ffff:/i.test(h));
 }
@@ -33,7 +34,9 @@ export function resolveUri(uri, { ipfsGateway = DEFAULT_IPFS_GATEWAY, arweaveGat
   try { url = new URL(u); } catch { return null; }
   if (url.protocol !== "https:" && url.protocol !== "http:") return null;
   if (url.username || url.password) return null;
-  if (PRIVATE_HOST.test(url.hostname) || isPrivateIp(url.hostname)) return null;
+  // A trailing dot names the same host ("localhost." is localhost), and a single-label name resolves on the local network.
+  const host = url.hostname.replace(/\.+$/, "");
+  if (!host || PRIVATE_HOST.test(host) || isPrivateIp(host) || (!host.includes(".") && !host.includes(":"))) return null;
   if (RETIRED_IPFS_HOSTS.has(url.hostname.toLowerCase()) && url.pathname.startsWith("/ipfs/")) {
     try { url = new URL(ipfsGateway + url.pathname.slice("/ipfs/".length) + url.search); } catch { return null; }
   }
