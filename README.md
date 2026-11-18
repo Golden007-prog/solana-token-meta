@@ -68,6 +68,7 @@ npx github:blixvip/solana-token-meta 2b1kV6DkPAnxd5ixfnxCpjxmKwqjjaYmCZfHsFu24GX
 ```
 
 Several mints at once, `--uri` to fetch the off-chain JSON, `--json` for the full result, `--rpc <url>` for your own endpoint.
+The CLI reports unknown long options and requires an HTTP or HTTPS URL after `--rpc`.
 
 Library:
 

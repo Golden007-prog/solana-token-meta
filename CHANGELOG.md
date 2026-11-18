@@ -2,6 +2,12 @@
 
 All notable changes to this project are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Fixed
+
+- The CLI rejects unknown long options and reports a missing or invalid `--rpc` URL before looking up tokens.
+
 ## [1.0.1] - 2026-11-17
 
 ### Fixed

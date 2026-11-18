@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
+import { fileURLToPath } from "node:url";
 import { getTokenMeta, getTokenMetas, riskFlags, resolveUri, fetchOffchainJson, InvalidInputError, RpcError, RpcTimeoutError, PUBLIC_RPC } from "../src/index.js";
 import { fakeFetch, MINTS } from "./helpers.js";
 
@@ -115,13 +116,38 @@ test("fetchJson:true adds `offchain` to every result with metadata (one GET each
 });
 
 test("CLI: --help exits 0, a bad address exits 1 with a clear message", () => {
-  const cli = new URL("../bin/cli.js", import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1");
+  const cli = fileURLToPath(new URL("../bin/cli.js", import.meta.url));
   const help = spawnSync(process.execPath, [cli, "--help"], { encoding: "utf8" });
   assert.equal(help.status, 0);
   assert.match(help.stdout, /solana-token-meta <mint\.\.\.>/);
   const bad = spawnSync(process.execPath, [cli, "nope"], { encoding: "utf8", env: { ...process.env, SOLANA_RPC_URL: "http://127.0.0.1:9" } });
   assert.equal(bad.status, 1);
   assert.match(bad.stderr, /not a Solana address/);
+});
+
+test("CLI: invalid options report the problem before looking up a mint", () => {
+  const cli = fileURLToPath(new URL("../bin/cli.js", import.meta.url));
+  const env = { ...process.env, SOLANA_RPC_URL: "http://127.0.0.1:9" };
+  for (const [options, message] of [
+    [["--jsn"], /unknown option: --jsn/],
+    [["--rpc"], /--rpc requires a URL/],
+    [["--rpc", "--json"], /--rpc requires a URL/],
+    [["--rpc", "not-a-url"], /--rpc must be an HTTP\(S\) URL/],
+    [["--rpc", "ftp://example.test"], /--rpc must be an HTTP\(S\) URL/],
+  ]) {
+    const result = spawnSync(process.execPath, [cli, MINTS.usdc, ...options], { encoding: "utf8", env });
+    assert.equal(result.status, 1, options.join(" "));
+    assert.match(result.stderr, message, options.join(" "));
+  }
+});
+
+test("CLI: valid options and duplicate help flags still show help", () => {
+  const cli = fileURLToPath(new URL("../bin/cli.js", import.meta.url));
+  const result = spawnSync(process.execPath,
+    [cli, "-h", "--help", "--json", "--uri", "--rpc", "https://example.test/rpc"], { encoding: "utf8" });
+  assert.equal(result.status, 0);
+  assert.equal(result.stderr, "");
+  assert.match(result.stdout, /solana-token-meta <mint\.\.\.>/);
 });
 
 test("live: USDC and PYUSD on the public RPC (LIVE=1 only)", { skip: process.env.LIVE !== "1" }, async () => {

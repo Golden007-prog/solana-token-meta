@@ -2,12 +2,34 @@
 // solana-token-meta <mint...> [--json] [--uri] [--rpc <url>]
 import { getTokenMetas, riskFlags, PUBLIC_RPC, TokenMetaError } from "../src/index.js";
 
-const args = process.argv.slice(2);
-const flag = (name) => { const i = args.indexOf(name); if (i < 0) return false; args.splice(i, 1); return true; };
-const value = (name) => { const i = args.indexOf(name); if (i < 0) return null; const v = args[i + 1]; args.splice(i, 2); return v; };
-const json = flag("--json"), uri = flag("--uri"), help = flag("-h") || flag("--help");
-const rpcUrl = value("--rpc") || process.env.SOLANA_RPC_URL || PUBLIC_RPC;
-const mints = args.filter((a) => !a.startsWith("--"));
+function parseArgs(args) {
+  const options = { mints: [], json: false, uri: false, help: false, rpcUrl: process.env.SOLANA_RPC_URL || PUBLIC_RPC };
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+    if (arg === "--json") options.json = true;
+    else if (arg === "--uri") options.uri = true;
+    else if (arg === "-h" || arg === "--help") options.help = true;
+    else if (arg === "--rpc") {
+      const value = args[++i];
+      if (!value || value.startsWith("-")) throw new Error("--rpc requires a URL");
+      if (!URL.canParse(value) || !["http:", "https:"].includes(new URL(value).protocol)) {
+        throw new Error("--rpc must be an HTTP(S) URL");
+      }
+      options.rpcUrl = value;
+    } else if (arg.startsWith("--")) throw new Error(`unknown option: ${arg}`);
+    else options.mints.push(arg);
+  }
+  return options;
+}
+
+let options;
+try {
+  options = parseArgs(process.argv.slice(2));
+} catch (error) {
+  console.error(error.message);
+  process.exit(1);
+}
+const { mints, json, uri, help, rpcUrl } = options;
 if (help || !mints.length) {
   console.log(`solana-token-meta: everything about a Solana token mint, from one RPC call
 
